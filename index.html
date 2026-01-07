@@ -3,59 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CLUB_2000_SECURE</title>
+    <title>CLUB_2000_AUTH</title>
     <style>
-        body { background: #008080; font-family: "Tahoma", sans-serif; margin: 0; padding: 10px; font-size: 13px; }
+        body { background: #008080; font-family: "Tahoma", sans-serif; margin: 0; padding: 10px; font-size: 12px; }
         .win { background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff; width: 100%; max-width: 360px; margin: 0 auto; }
-        .title { background: linear-gradient(to right, #000080, #1084d0); color: #fff; padding: 3px 5px; font-weight: bold; display: flex; justify-content: space-between; }
+        .title { background: linear-gradient(to right, #000080, #1084d0); color: #fff; padding: 3px 5px; font-weight: bold; }
         #box { background: #fff; height: 250px; overflow-y: scroll; border: 2px inset #fff; margin: 5px; padding: 5px; }
-        .msg { border-bottom: 1px dotted #808080; margin-bottom: 5px; padding-bottom: 2px; }
-        .time { color: #666; font-size: 10px; }
+        .msg { border-bottom: 1px dotted #808080; margin-bottom: 5px; padding: 2px; }
+        .priv { background: #ffe0ff; border-left: 3px solid #800080; } /* Стиль ЛС */
         .u { color: #0000ff; font-weight: bold; cursor: pointer; text-decoration: underline; }
-        .sys { color: #ff00ff; font-style: italic; }
         .input-bar { background: #c0c0c0; padding: 8px; border-top: 1px solid #808080; text-align: center; }
-        input, textarea { font-size: 12px; border: 2px inset #fff; padding: 2px; }
-        .btn { background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff; cursor: pointer; padding: 2px 8px; font-weight: bold; font-size: 11px; }
-        .btn:active { border-color: #808080 #fff #fff #808080; }
-        #profile-win { position: fixed; top: 10%; left: 5%; right: 5%; display: none; z-index: 100; box-shadow: 8px 8px 0px rgba(0,0,0,0.5); }
-        marquee { background: #000; color: #0f0; padding: 2px; font-family: monospace; }
+        input { font-size: 12px; border: 2px inset #fff; padding: 2px; margin: 2px; }
+        .btn { background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff; cursor: pointer; padding: 2px 5px; font-weight: bold; }
+        #auth-screen { padding: 20px; text-align: center; }
     </style>
 </head>
 <body>
 
-<div class="win">
-    <div class="title"><span>🌼 CLUB_2000_v3.exe</span> <span onclick="location.reload()">[?] [X]</span></div>
-    <marquee scrollamount="3">ДОБРО ПОЖАЛОВАТЬ! ССЫЛКИ РАЗРЕШЕНЫ ТОЛЬКО ПОСЛЕ ЗАПОЛНЕНИЯ АНКЕТЫ! ПРИЯТНОГО ОБЩЕНИЯ!</marquee>
-
-    <div id="box">Загрузка сообщений...</div>
-    
-    <div class="input-bar">
-        <input type="text" id="user" value="User" style="width:50px">
-        <input type="text" id="msg" style="width:160px" placeholder="Сообщение...">
-        <button class="btn" onclick="send()">OK</button>
-        <div style="margin-top:10px;">
-            <button class="btn" onclick="load()">ОБНОВИТЬ</button>
-            <button class="btn" onclick="document.getElementById('profile-win').style.display='block'">МОЯ АНКЕТА</button>
-        </div>
+<div id="login-zone" class="win">
+    <div class="title">ВХОД В КЛУБ</div>
+    <div id="auth-screen">
+        Ник: <br><input type="text" id="user" style="width:120px"><br>
+        Пароль: <br><input type="password" id="pass" style="width:120px"><br><br>
+        <button class="btn" onclick="login()">ВОЙТИ / СОЗДАТЬ</button>
     </div>
 </div>
 
-<div id="profile-win" class="win">
-    <div class="title">РЕДАКТОР ПРОФИЛЯ</div>
-    <div style="padding:10px;">
-        Расскажи о себе (для защиты от ботов):<br>
-        <textarea id="p-about" style="width:95%; height:40px;"></textarea><br>
-        Твоё любимое занятие:<br>
-        <input type="text" id="p-hobby" style="width:95%"><br><br>
-        <button class="btn" onclick="saveProfile()">СОХРАНИТЬ</button>
-        <button class="btn" onclick="document.getElementById('profile-win').style.display='none'">ЗАКРЫТЬ</button>
+<div id="chat-zone" class="win" style="display:none;">
+    <div class="title">🌼 КЛУБ 2000: <span id="my-name"></span></div>
+    <div id="box">Загрузка...</div>
+    <div class="input-bar">
+        <input type="text" id="msg" style="width:70%" placeholder="Сообщение или /w ник...">
+        <button class="btn" onclick="send()">OK</button>
+        <div style="margin-top:5px;">
+            <button class="btn" onclick="load()">ОБНОВИТЬ</button>
+            <button class="btn" onclick="location.reload()">ВЫХОД</button>
+        </div>
     </div>
 </div>
 
 <script>
     var dbUrl = "https://ple7-edit-v1-default-rtdb.europe-west1.firebasedatabase.app/";
+    var currentUser = "";
+    var currentPass = "";
 
-    // 1. ЗАГРУЗКА
+    // 1. АВТОРИЗАЦИЯ
+    function login() {
+        var u = document.getElementById('user').value.trim();
+        var p = document.getElementById('pass').value.trim();
+        if(u.length < 2 || p.length < 2) { alert("Ник и пароль слишком короткие!"); return; }
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", dbUrl + "profiles/" + u + ".json", true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4) {
+                var profile = JSON.parse(xhr.responseText);
+                if (!profile) {
+                    // Регистрация нового юзера
+                    if(confirm("Ник свободен. Создать аккаунт?")) {
+                        saveAccount(u, p);
+                    }
+                } else {
+                    // Проверка пароля
+                    if (profile.pw === p) {
+                        startChat(u, p);
+                    } else {
+                        alert("НЕВЕРНЫЙ ПАРОЛЬ!");
+                    }
+                }
+            }
+        };
+        xhr.send();
+    }
+
+    function saveAccount(u, p) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("PUT", dbUrl + "profiles/" + u + ".json", true);
+        xhr.send(JSON.stringify({ pw: p, about: "Новичок", hobby: "-" }));
+        alert("Аккаунт создан!");
+        startChat(u, p);
+    }
+
+    function startChat(u, p) {
+        currentUser = u;
+        currentPass = p;
+        document.getElementById('login-zone').style.display = 'none';
+        document.getElementById('chat-zone').style.display = 'block';
+        document.getElementById('my-name').innerText = u;
+        load();
+        setInterval(load, 15000);
+    }
+
+    // 2. ЗАГРУЗКА И ФИЛЬТР ЛС
     function load() {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", dbUrl + "messages.json?nocache=" + Math.random(), true);
@@ -66,14 +105,15 @@
                 box.innerHTML = "";
                 for (var id in data) {
                     var m = data[id];
-                    var t = m.t ? '<span class="time">[' + m.t + ']</span> ' : "";
-                    var del = ' <span style="color:red;cursor:pointer" onclick="delMsg(\''+id+'\')">[x]</span>';
                     
-                    if(m.u === "СИСТЕМА") {
-                        box.innerHTML += '<div class="msg">' + t + '<span class="sys">' + m.m + '</span>' + del + '</div>';
-                    } else {
-                        box.innerHTML += '<div class="msg">' + t + '<span class="u" onclick="viewUser(\''+m.u+'\')">' + m.u + ':</span> ' + m.m + del + '</div>';
-                    }
+                    // ФИЛЬТР ЛС: если сообщение приватное, показываем только автору и получателю
+                    if (m.to && m.to !== currentUser && m.u !== currentUser) continue;
+
+                    var isPriv = m.to ? " priv" : "";
+                    var t = m.t ? '<span class="time">['+m.t+']</span> ' : "";
+                    var sender = '<span class="u">' + m.u + ':</span> ';
+                    
+                    box.innerHTML += '<div class="msg'+isPriv+'">' + t + sender + m.m + '</div>';
                 }
                 box.scrollTop = box.scrollHeight;
             }
@@ -81,41 +121,20 @@
         xhr.send();
     }
 
-    // 2. УМНАЯ ОТПРАВКА С ПРОВЕРКОЙ НА ССЫЛКИ
+    // 3. ОТПРАВКА (с поддержкой /w)
     function send() {
-        var u = document.getElementById('user').value;
         var m = document.getElementById('msg').value;
         if (!m) return;
 
-        // Ищем признаки ссылок
-        var linkPattern = /(http|https|www|\.ru|\.com|\.net|\.org)/i;
-        if (linkPattern.test(m)) {
-            // Если ссылка есть — проверяем анкету
-            var checkXhr = new XMLHttpRequest();
-            checkXhr.open("GET", dbUrl + "profiles/" + u + ".json", true);
-            checkXhr.onreadystatechange = function() {
-                if (checkXhr.readyState == 4) {
-                    var profile = JSON.parse(checkXhr.responseText);
-                    if (!profile) {
-                        alert("⚠️ СТОП! Ссылки могут слать только те, кто заполнил АНКЕТУ!");
-                    } else {
-                        proceedSend(u, m);
-                    }
-                }
-            };
-            checkXhr.send();
-        } else {
-            // Ссылок нет — шлем сразу
-            proceedSend(u, m);
-        }
-    }
+        var toUser = null;
+        var msgText = m;
 
-    function proceedSend(u, m) {
-        if (m.indexOf('/me ') === 0) {
-            m = "*** " + u + " " + m.substring(4) + " ***";
-            u = "СИСТЕМА";
-        } else if (m.indexOf('/love ') === 0) {
-           m = "<b style='color:red;'>&lt;3 &lt;3 " + u + " посылает любовь для " + m.substring(6) + "! &lt;3 &lt;3</b>";
+        // Обработка /w Ник Сообщение
+        if (m.indexOf('/w ') === 0) {
+            var parts = m.split(' ');
+            if (parts.length < 3) { alert("Формат: /w Ник Текст"); return; }
+            toUser = parts[1];
+            msgText = "<b>[ЛС для " + toUser + "]:</b> " + parts.slice(2).join(' ');
         }
 
         var d = new Date();
@@ -123,50 +142,10 @@
 
         var xhr = new XMLHttpRequest();
         xhr.open("POST", dbUrl + "messages.json", true);
-        xhr.onreadystatechange = function() { if(xhr.readyState==4) { document.getElementById('msg').value=""; load(); } };
-        xhr.send(JSON.stringify({ u: u, m: m, t: time }));
+        xhr.send(JSON.stringify({ u: currentUser, m: msgText, t: time, to: toUser }));
+        document.getElementById('msg').value = "";
+        setTimeout(load, 500);
     }
-
-    // 3. АНКЕТЫ
-    function saveProfile() {
-        var u = document.getElementById('user').value;
-        var a = document.getElementById('p-about').value;
-        var h = document.getElementById('p-hobby').value;
-        if (u === "User") { alert("Сначала выбери себе крутой ник!"); return; }
-        
-        var xhr = new XMLHttpRequest();
-        xhr.open("PUT", dbUrl + "profiles/" + u + ".json", true);
-        xhr.send(JSON.stringify({ about: a, hobby: h }));
-        alert("Анкета сохранена! Теперь ты элитный участник клуба.");
-        document.getElementById('profile-win').style.display = 'none';
-    }
-
-    function viewUser(name) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", dbUrl + "profiles/" + name + ".json", true);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState == 4 && xhr.status == 200) {
-                var p = JSON.parse(xhr.responseText);
-                if (!p) alert("У юзера " + name + " еще нет анкеты.");
-                else alert("АНКЕТА ЮЗЕРА " + name + ":\n\nО себе: " + p.about + "\nХобби: " + p.hobby);
-            }
-        };
-        xhr.send();
-    }
-
-    // 4. УДАЛЕНИЕ (Пароль 2000)
-    function delMsg(id) {
-        var p = prompt("Пароль админа:");
-        if (p === "2000") {
-            var xhr = new XMLHttpRequest();
-            xhr.open("DELETE", dbUrl + "messages/" + id + ".json", true);
-            xhr.onreadystatechange = function() { if(xhr.readyState==4) load(); };
-            xhr.send();
-        }
-    }
-
-    load();
-    setInterval(load, 30000); // Автообновление
 </script>
 </body>
 </html>
