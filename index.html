@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>AeroChat</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        body { background-color: #4facfe; font-family: Tahoma, sans-serif; margin: 0; padding: 0; font-size: 12px; }
+        .window { width: 100%; border-collapse: collapse; }
+        .title-bar { 
+            background: linear-gradient(to bottom, #7abcff, #4096ee); 
+            color: white; padding: 4px; font-weight: bold; font-size: 13px;
+            border-bottom: 1px solid #003366;
+        }
+        #chat-box { 
+            height: 200px; overflow-y: scroll; background: #ffffff; 
+            padding: 5px; border: 1px solid #707070; margin: 2px;
+        }
+        .msg { margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 2px; }
+        .n { color: #0055ff; font-weight: bold; }
+        .t { color: #000; }
+        .input-row { background: #cedbe9; padding: 5px; }
+        input { font-size: 11px; border: 1px solid #707070; padding: 2px; }
+        button { font-size: 11px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<table class="window" width="100%">
+    <tr>
+        <td class="title-bar">🌼 AeroChat ICQ</td>
+    </tr>
+    <tr>
+        <td>
+            <div id="chat-box">Загрузка...</div>
+        </td>
+    </tr>
+    <tr class="input-row">
+        <td>
+            <table width="100%">
+                <tr>
+                    <td><input type="text" id="user" value="Ник" style="width: 40px;"></td>
+                    <td width="100%"><input type="text" id="msg" style="width: 95%;" placeholder="Сообщение..."></td>
+                    <td><button onclick="send()">OK</button></td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<script>
+    // Твои настройки уже здесь
+    var config = {
+        apiKey: "AIzaSyCCMz8l4I6c6TKTiR4jGsmIjrKtyQdWIno",
+        authDomain: "ple7-edit-v1.firebaseapp.com",
+        databaseURL: "https://ple7-edit-v1-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "ple7-edit-v1",
+    };
+
+    firebase.initializeApp(config);
+    var db = firebase.database().ref('messages');
+
+    // Получение сообщений
+    db.limitToLast(10).on('value', function(snapshot) {
+        var box = document.getElementById('chat-box');
+        box.innerHTML = "";
+        snapshot.forEach(function(child) {
+            var val = child.val();
+            box.innerHTML += '<div class="msg"><span class="n">' + val.u + ':</span> <span class="t">' + val.m + '</span></div>';
+        });
+        box.scrollTop = box.scrollHeight;
+    });
+
+    // Отправка
+    function send() {
+        var u = document.getElementById('user').value;
+        var m = document.getElementById('msg').value;
+        if (m == "") return;
+        
+        db.push({ u: u, m: m });
+        document.getElementById('msg').value = "";
+    }
+</script>
+
+</body>
+</html>
