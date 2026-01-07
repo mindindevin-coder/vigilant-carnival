@@ -2,54 +2,79 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>AeroChat Lite</title>
+    <title>Aero ICQ Lite</title>
     <style>
-        body { background: #4facfe; font-family: monospace; font-size: 12px; }
-        #box { background: white; height: 150px; overflow: auto; border: 1px solid #000; margin-bottom: 5px; padding: 2px; }
-        input { font-size: 12px; width: 80%; }
+        /* Стиль в духе старой Windows для экономии ресурсов */
+        body { background: #008080; font-family: sans-serif; font-size: 14px; color: #000; margin: 0; }
+        .win { background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff; width: 100%; max-width: 300px; margin: auto; }
+        .title { background: #000080; color: #fff; padding: 3px; font-weight: bold; }
+        #box { background: #fff; height: 180px; overflow: auto; border: 2px inset #fff; margin: 5px; padding: 3px; }
+        .msg { border-bottom: 1px dotted #808080; margin-bottom: 3px; }
+        .u { color: #ff0000; font-weight: bold; }
+        .input-area { padding: 5px; }
+        input { width: 100px; }
     </style>
 </head>
 <body>
-    <div style="background:#0055ff; color:white; padding:3px;">🌼 Aero ICQ HTTP</div>
-    <div id="box">Нажми Обновить...</div>
+
+<div class="win">
+    <div class="title">🌼 AeroChat ICQ (Opera Edition)</div>
+    <div id="box">Нажми "Обновить"...</div>
     
-    <input type="text" id="m" placeholder="Сообщение">
-    <button onclick="send()">OK</button>
-    <button onclick="load()">Обновить</button>
+    <div class="input-area">
+        <input type="text" id="user" value="User" style="width:50px">
+        <input type="text" id="msg" placeholder="Текст...">
+        <br>
+        <button onclick="send()">[ ОТПРАВИТЬ ]</button>
+        <button onclick="load()">[ ОБНОВИТЬ ]</button>
+    </div>
+</div>
 
 <script>
-    // URL твоей базы с окончанием .json - это важно!
-    var url = "https://ple7-edit-v1-default-rtdb.europe-west1.firebasedatabase.app/messages.json";
+    // Прямой путь к твоей базе (через .json)
+    var dbUrl = "https://ple7-edit-v1-default-rtdb.europe-west1.firebasedatabase.app/messages.json";
 
     function load() {
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", url, true);
+        // Добавляем случайное число, чтобы Opera Mini не брала старую копию из кеша
+        xhr.open("GET", dbUrl + "?nocache=" + Math.random(), true);
         xhr.onreadystatechange = function() {
-            if (xhr.readyState == 4 && xhr.status == 200) {
-                var data = JSON.parse(xhr.responseText);
-                var out = "";
-                for (var id in data) {
-                    out += "<b>" + data[id].u + ":</b> " + data[id].m + "<br>";
+            if (xhr.readyState == 4) {
+                if (xhr.status == 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    var html = "";
+                    for (var id in data) {
+                        html += '<div class="msg"><span class="u">' + data[id].u + ':</span> ' + data[id].m + '</div>';
+                    }
+                    document.getElementById('box').innerHTML = html;
+                } else {
+                    document.getElementById('box').innerHTML = "Ошибка сети: " + xhr.status;
                 }
-                document.getElementById('box').innerHTML = out;
             }
         };
         xhr.send();
     }
 
     function send() {
-        var msg = document.getElementById('m').value;
-        if(!msg) return;
+        var u = document.getElementById('user').value;
+        var m = document.getElementById('msg').value;
+        if (!m) return;
+
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", url, true);
-        // Отправляем как простой текст
-        xhr.send(JSON.stringify({u: "User", m: msg}));
-        document.getElementById('m').value = "";
-        setTimeout(load, 1000); // Обновить через секунду
+        xhr.open("POST", dbUrl, true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4) {
+                document.getElementById('msg').value = "";
+                load(); // Обновляем список после отправки
+            }
+        };
+        // Отправляем данные в формате JSON
+        xhr.send(JSON.stringify({ u: u, m: m }));
     }
-    
-    // Авто-загрузка
+
+    // Пробуем загрузить сразу
     load();
 </script>
+
 </body>
 </html>
