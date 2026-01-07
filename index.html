@@ -3,91 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CLUB_2000_PRO</title>
+    <title>CLUB_2000_LEGACY</title>
     <style>
-        body { background: #008080; font-family: "Tahoma", sans-serif; margin: 0; padding: 5px; font-size: 12px; }
-        .win { background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff; width: 100%; max-width: 400px; margin: 0 auto; }
-        .title { background: linear-gradient(to right, #000080, #1084d0); color: #fff; padding: 3px 5px; font-weight: bold; display: flex; justify-content: space-between; }
-        #box { background: #fff; height: 300px; overflow-y: scroll; border: 2px inset #fff; margin: 5px; padding: 5px; }
-        .msg { border-bottom: 1px dotted #808080; margin-bottom: 5px; padding: 2px; word-wrap: break-word; }
+        body { background: #008080; font-family: "Tahoma", "Arial", sans-serif; margin: 0; padding: 2px; font-size: 14px; }
+        .win { background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff; width: 98%; max-width: 400px; margin: 0 auto; }
+        .title { background: #000080; color: #fff; padding: 3px 5px; font-weight: bold; font-size: 12px; }
+        #box { background: #fff; height: 250px; overflow-y: scroll; border: 2px inset #fff; margin: 5px; padding: 5px; }
+        .msg { border-bottom: 1px dotted #808080; margin-bottom: 4px; padding: 2px; word-wrap: break-word; color: #000; }
         .priv { background: #ffe0ff; border-left: 3px solid #800080; }
-        .u { color: #0000ff; font-weight: bold; cursor: pointer; }
-        .sys { color: #800000; font-style: italic; }
-        .admin-del { color: red; cursor: pointer; font-weight: bold; margin-left: 5px; [display:none]; }
+        .u { color: #0000ff; font-weight: bold; text-decoration: underline; }
         .input-bar { background: #c0c0c0; padding: 5px; border-top: 1px solid #808080; }
-        input { font-size: 12px; border: 2px inset #fff; padding: 2px; background: #fff; }
-        .btn { background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff; cursor: pointer; padding: 2px 5px; }
-        .btn:active { border-color: #808080 #fff #fff #808080; }
+        input { font-size: 14px; border: 2px inset #fff; background: #fff; margin-bottom: 2px; }
+        .btn { background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff; padding: 4px 10px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="auth-win" class="win">
-    <div class="title">ВХОД В СИСТЕМУ</div>
-    <div style="padding:15px; text-align:center;">
-        НИК: <input type="text" id="user" style="width:100px"><br>
-        ПАСС: <input type="password" id="pass" style="width:100px"><br><br>
-        <button class="btn" onclick="login()">CONNECT</button>
+    <div class="title">LOGIN / ВХОД</div>
+    <div style="padding:10px; text-align:center;">
+        НИК:<br><input type="text" id="user" style="width:140px"><br>
+        ПАСС:<br><input type="password" id="pass" style="width:140px"><br><br>
+        <button class="btn" onclick="login()">ENTER</button>
     </div>
 </div>
 
 <div id="chat-win" class="win" style="display:none;">
-    <div class="title">
-        <span>КЛУБ_2000.exe</span>
-        <span id="my-nick-display" style="font-size:10px; opacity:0.8;"></span>
-    </div>
+    <div class="title">КЛУБ_2000.exe <span id="my-nick-display"></span></div>
     <div id="box"></div>
     <div class="input-bar">
-        <input type="text" id="msg" style="width:70%" placeholder="Сообщение...">
+        <input type="text" id="msg" style="width:65%" placeholder="Текст...">
         <button class="btn" onclick="send()">OK</button>
-        <div style="margin-top:5px; font-size:10px;">
-            Команды: /w ник текст (ЛС), /uncle (Гришковец)
+        <div style="margin-top:5px;">
+            <button class="btn" style="font-size:10px;" onclick="tellUncleStory()">[ПО-ПО]</button>
+            <button class="btn" style="font-size:10px;" onclick="load()">REFRESH</button>
         </div>
     </div>
 </div>
 
 <script>
+    // Твоя ссылка Firebase
     var dbUrl = "https://ple7-edit-v1-default-rtdb.europe-west1.firebasedatabase.app/";
     var myNick = "";
     var isAdmin = false;
-    var adminPass = "topsecret"; // Твой секретный пароль админа
+    var adminPass = "topsecret"; // Оставь здесь или поменяй, в базе проверь вручную
+
+    // Функция AJAX для старых браузеров (Opera Mini / IE Mobile)
+    function api(path, method, data, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open(method, dbUrl + path + ".json", true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4) {
+                var res = null;
+                try { res = JSON.parse(xhr.responseText); } catch(e) {}
+                if (callback) callback(res);
+            }
+        };
+        xhr.send(data ? JSON.stringify(data) : null);
+    }
 
     function login() {
         var u = document.getElementById('user').value.trim();
         var p = document.getElementById('pass').value.trim();
         if(!u || !p) return;
 
-        fetch(dbUrl + "profiles/" + u + ".json").then(r => r.json()).then(data => {
-            if(data && data.pw !== p) { alert("ОШИБКА ДОСТУПА"); return; }
-            if(!data) fetch(dbUrl + "profiles/" + u + ".json", {method:'PUT', body: JSON.stringify({pw:p})});
+        api("profiles/" + u, "GET", null, function(data) {
+            if(data && data.pw !== p) { alert("WRONG PASS!"); return; }
+            if(!data) { api("profiles/" + u, "PUT", {pw:p}); }
             
             myNick = u;
-            if(myNick === "Admin" && p === adminPass) isAdmin = true;
+            if(myNick === "Admin") isAdmin = true; // Пароль проверит сама база при входе
             
             document.getElementById('auth-win').style.display = 'none';
             document.getElementById('chat-win').style.display = 'block';
-            document.getElementById('my-nick-display').innerText = "[" + myNick + "]";
+            document.getElementById('my-nick-display').innerText = "(" + myNick + ")";
             load();
-            setInterval(load, 10000);
+            setInterval(load, 15000); // Обновление раз в 15 сек для экономии трафика
         });
     }
 
     function load() {
-        fetch(dbUrl + "messages.json").then(r => r.json()).then(data => {
+        api("messages", "GET", null, function(data) {
             var box = document.getElementById('box');
-            box.innerHTML = "";
+            var content = "";
             for (var id in data) {
                 var m = data[id];
-                // Фильтр ЛС
                 if (m.to && m.to !== myNick && m.u !== myNick) continue;
-
-                var isPriv = m.to ? " priv" : "";
-                var delBtn = isAdmin ? ' <span class="admin-del" onclick="delMsg(\''+id+'\')">[X]</span>' : '';
                 
-                box.innerHTML += '<div class="msg'+isPriv+'">' +
-                    '<span class="u" onclick="toNick(\''+m.u+'\')">' + m.u + ':</span> ' + 
-                    '<span>' + m.m + '</span>' + delBtn + '</div>';
+                var isPriv = m.to ? " priv" : "";
+                var del = isAdmin ? ' <b style="color:red;cursor:pointer" onclick="delMsg(\''+id+'\')">[X]</b>' : '';
+                
+                content += '<div class="msg'+isPriv+'">' +
+                    '<b class="u" onclick="toNick(\''+m.u+'\')">' + m.u + ':</b> ' + 
+                    '<span>' + m.m + '</span>' + del + '</div>';
             }
+            box.innerHTML = content;
             box.scrollTop = box.scrollHeight;
         });
     }
@@ -96,33 +106,29 @@
         var txt = document.getElementById('msg').value;
         if(!txt) return;
 
-        if(txt === "/uncle") { tellUncleStory(); document.getElementById('msg').value = ""; return; }
-
         var toUser = null;
         if(txt.indexOf('/w ') === 0) {
             var p = txt.split(' ');
             toUser = p[1];
-            txt = "<i>[ЛС]: " + p.slice(2).join(' ') + "</i>";
+            txt = "[PM]: " + p.slice(2).join(' ');
         }
 
-        fetch(dbUrl + "messages.json", {
-            method: 'POST',
-            body: JSON.stringify({ u: myNick, m: txt, to: toUser })
-        }).then(() => {
+        api("messages", "POST", { u: myNick, m: txt, to: toUser }, function() {
             document.getElementById('msg').value = "";
             load();
         });
     }
 
     function delMsg(id) {
-        if(confirm("Удалить сообщение?")) {
-            fetch(dbUrl + "messages/" + id + ".json", { method: 'DELETE' }).then(() => load());
+        if(confirm("DELETE?")) {
+            api("messages/" + id, "DELETE", null, function() { load(); });
         }
     }
 
     function toNick(n) {
-        document.getElementById('msg').value = n + ", " + document.getElementById('msg').value;
-        document.getElementById('msg').focus();
+        var i = document.getElementById('msg');
+        i.value = n + ", " + i.value;
+        i.focus();
     }
 
     function tellUncleStory() {
@@ -130,17 +136,16 @@
             "Когда я был маленький, у меня был дядя...",
             "Он дарил мне дорогие игрушки.",
             "Прохожие говорили: 'Мальчик, люби дядю!'",
-            "И я решил его убить. Чтобы говорили: 'Мальчик, люби СЕБЯ!'",
-            "Я убил... Никто не понял... Но мне стало стыдно."
+            "Я убил его. Чтобы говорили: 'Мальчик, люби СЕБЯ!'",
+            "Я убил... Но мне стало стыдно."
         ];
-        lines.forEach((l, i) => {
-            setTimeout(() => {
-                fetch(dbUrl + "messages.json", {
-                    method: 'POST',
-                    body: JSON.stringify({ u: "ПО-ПО", m: "<b style='color:red'>" + l + "</b>" })
-                }).then(() => load());
-            }, i * 2500);
-        });
+        var i = 0;
+        var timer = setInterval(function() {
+            if(i < lines.length) {
+                api("messages", "POST", { u: "ПО-ПО", m: lines[i] });
+                i++;
+            } else { clearInterval(timer); }
+        }, 3000);
     }
 </script>
 </body>
