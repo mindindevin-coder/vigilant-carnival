@@ -2,79 +2,60 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>XP_CHAT_CLUB_2000</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLUB_2000_SECURE</title>
     <style>
-        /* Ретро-стиль Windows XP / Aero */
-        body { background: #008080; font-family: "Tahoma", "Arial", sans-serif; margin: 0; padding: 10px; font-size: 13px; }
-        .win { background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff; width: 100%; max-width: 350px; margin: 0 auto; }
-        .title { background: linear-gradient(to right, #000080, #1084d0); color: #fff; padding: 3px 5px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
-        
-        /* Зона чата */
-        #box { background: #fff; height: 220px; overflow-y: scroll; border: 2px inset #fff; margin: 5px; padding: 5px; }
-        .msg { border-bottom: 1px dotted #808080; margin-bottom: 5px; padding-bottom: 3px; word-wrap: break-word; }
-        .time { color: #666; font-size: 10px; font-family: monospace; }
+        body { background: #008080; font-family: "Tahoma", sans-serif; margin: 0; padding: 10px; font-size: 13px; }
+        .win { background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff; width: 100%; max-width: 360px; margin: 0 auto; }
+        .title { background: linear-gradient(to right, #000080, #1084d0); color: #fff; padding: 3px 5px; font-weight: bold; display: flex; justify-content: space-between; }
+        #box { background: #fff; height: 250px; overflow-y: scroll; border: 2px inset #fff; margin: 5px; padding: 5px; }
+        .msg { border-bottom: 1px dotted #808080; margin-bottom: 5px; padding-bottom: 2px; }
+        .time { color: #666; font-size: 10px; }
         .u { color: #0000ff; font-weight: bold; cursor: pointer; text-decoration: underline; }
         .sys { color: #ff00ff; font-style: italic; }
-        
-        /* Поля ввода */
-        .input-bar { background: #c0c0c0; padding: 8px; border-top: 1px solid #808080; }
-        input { font-size: 12px; padding: 2px; border: 2px inset #fff; }
-        .btn { background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff; cursor: pointer; padding: 2px 6px; font-size: 11px; font-weight: bold; }
+        .input-bar { background: #c0c0c0; padding: 8px; border-top: 1px solid #808080; text-align: center; }
+        input, textarea { font-size: 12px; border: 2px inset #fff; padding: 2px; }
+        .btn { background: #c0c0c0; border: 2px solid; border-color: #fff #808080 #808080 #fff; cursor: pointer; padding: 2px 8px; font-weight: bold; font-size: 11px; }
         .btn:active { border-color: #808080 #fff #fff #808080; }
-
-        /* Окно анкеты */
-        #profile-win { 
-            position: fixed; top: 15%; left: 5%; right: 5%; display: none; z-index: 100;
-            box-shadow: 10px 10px 0px rgba(0,0,0,0.3);
-        }
-        marquee { background: #000; color: #0f0; font-family: monospace; padding: 2px; }
+        #profile-win { position: fixed; top: 10%; left: 5%; right: 5%; display: none; z-index: 100; box-shadow: 8px 8px 0px rgba(0,0,0,0.5); }
+        marquee { background: #000; color: #0f0; padding: 2px; font-family: monospace; }
     </style>
 </head>
 <body>
 
 <div class="win">
-    <div class="title">
-        <span>🌼 CLUB_2000.exe</span>
-        <span onclick="location.reload()" style="cursor:pointer">[?] [X]</span>
-    </div>
-    
-    <marquee scrollamount="3">*** ДОБРО ПОЖАЛОВАТЬ В КЛУБ ЮЗЕРОВ 2000-х! *** ПИШИ /me ДЛЯ ДЕЙСТВИЙ *** /love ДЛЯ ЛЮБВИ ***</marquee>
+    <div class="title"><span>🌼 CLUB_2000_v3.exe</span> <span onclick="location.reload()">[?] [X]</span></div>
+    <marquee scrollamount="3">ДОБРО ПОЖАЛОВАТЬ! ССЫЛКИ РАЗРЕШЕНЫ ТОЛЬКО ПОСЛЕ ЗАПОЛНЕНИЯ АНКЕТЫ! ПРИЯТНОГО ОБЩЕНИЯ!</marquee>
 
-    <div id="box">Установка связи...</div>
+    <div id="box">Загрузка сообщений...</div>
     
     <div class="input-bar">
-        <table width="100%">
-            <tr>
-                <td><input type="text" id="user" value="User" style="width:50px" title="Ник"></td>
-                <td><input type="text" id="msg" style="width:95%" placeholder="Текст..."></td>
-                <td><button class="btn" onclick="send()">OK</button></td>
-            </tr>
-        </table>
-        <div style="margin-top:8px; text-align: center;">
-            <button class="btn" onclick="load()">ОБНОВИТЬ [F5]</button>
-            <button class="btn" onclick="openProfile()">АНКЕТА</button>
+        <input type="text" id="user" value="User" style="width:50px">
+        <input type="text" id="msg" style="width:160px" placeholder="Сообщение...">
+        <button class="btn" onclick="send()">OK</button>
+        <div style="margin-top:10px;">
+            <button class="btn" onclick="load()">ОБНОВИТЬ</button>
+            <button class="btn" onclick="document.getElementById('profile-win').style.display='block'">МОЯ АНКЕТА</button>
         </div>
     </div>
 </div>
 
 <div id="profile-win" class="win">
-    <div class="title">РЕДАКТОР АНКЕТЫ</div>
+    <div class="title">РЕДАКТОР ПРОФИЛЯ</div>
     <div style="padding:10px;">
-        О себе:<br>
-        <textarea id="p-about" style="width:95%; height:50px;"></textarea><br>
-        Хобби:<br>
+        Расскажи о себе (для защиты от ботов):<br>
+        <textarea id="p-about" style="width:95%; height:40px;"></textarea><br>
+        Твоё любимое занятие:<br>
         <input type="text" id="p-hobby" style="width:95%"><br><br>
         <button class="btn" onclick="saveProfile()">СОХРАНИТЬ</button>
-        <button class="btn" onclick="document.getElementById('profile-win').style.display='none'">ОТМЕНА</button>
+        <button class="btn" onclick="document.getElementById('profile-win').style.display='none'">ЗАКРЫТЬ</button>
     </div>
 </div>
 
 <script>
-    // ТВОИ НАСТРОЙКИ
     var dbUrl = "https://ple7-edit-v1-default-rtdb.europe-west1.firebasedatabase.app/";
 
-    // 1. ЗАГРУЗКА СООБЩЕНИЙ
+    // 1. ЗАГРУЗКА
     function load() {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", dbUrl + "messages.json?nocache=" + Math.random(), true);
@@ -88,7 +69,6 @@
                     var t = m.t ? '<span class="time">[' + m.t + ']</span> ' : "";
                     var del = ' <span style="color:red;cursor:pointer" onclick="delMsg(\''+id+'\')">[x]</span>';
                     
-                    // Если сообщение системное (команды)
                     if(m.u === "СИСТЕМА") {
                         box.innerHTML += '<div class="msg">' + t + '<span class="sys">' + m.m + '</span>' + del + '</div>';
                     } else {
@@ -101,18 +81,41 @@
         xhr.send();
     }
 
-    // 2. ОТПРАВКА
+    // 2. УМНАЯ ОТПРАВКА С ПРОВЕРКОЙ НА ССЫЛКИ
     function send() {
         var u = document.getElementById('user').value;
         var m = document.getElementById('msg').value;
         if (!m) return;
 
-        // Команды
+        // Ищем признаки ссылок
+        var linkPattern = /(http|https|www|\.ru|\.com|\.net|\.org)/i;
+        if (linkPattern.test(m)) {
+            // Если ссылка есть — проверяем анкету
+            var checkXhr = new XMLHttpRequest();
+            checkXhr.open("GET", dbUrl + "profiles/" + u + ".json", true);
+            checkXhr.onreadystatechange = function() {
+                if (checkXhr.readyState == 4) {
+                    var profile = JSON.parse(checkXhr.responseText);
+                    if (!profile) {
+                        alert("⚠️ СТОП! Ссылки могут слать только те, кто заполнил АНКЕТУ!");
+                    } else {
+                        proceedSend(u, m);
+                    }
+                }
+            };
+            checkXhr.send();
+        } else {
+            // Ссылок нет — шлем сразу
+            proceedSend(u, m);
+        }
+    }
+
+    function proceedSend(u, m) {
         if (m.indexOf('/me ') === 0) {
             m = "*** " + u + " " + m.substring(4) + " ***";
             u = "СИСТЕМА";
         } else if (m.indexOf('/love ') === 0) {
-            m = "❤❤ " + u + " шлет любовь для " + m.substring(6) + "! ❤❤";
+            m = "❤❤ " + u + " посылает любовь для " + m.substring(6) + "! ❤❤";
             u = "СИСТЕМА";
         }
 
@@ -121,39 +124,38 @@
 
         var xhr = new XMLHttpRequest();
         xhr.open("POST", dbUrl + "messages.json", true);
-        xhr.setRequestHeader("Content-Type", "application/json");
         xhr.onreadystatechange = function() { if(xhr.readyState==4) { document.getElementById('msg').value=""; load(); } };
         xhr.send(JSON.stringify({ u: u, m: m, t: time }));
     }
 
     // 3. АНКЕТЫ
+    function saveProfile() {
+        var u = document.getElementById('user').value;
+        var a = document.getElementById('p-about').value;
+        var h = document.getElementById('p-hobby').value;
+        if (u === "User") { alert("Сначала выбери себе крутой ник!"); return; }
+        
+        var xhr = new XMLHttpRequest();
+        xhr.open("PUT", dbUrl + "profiles/" + u + ".json", true);
+        xhr.send(JSON.stringify({ about: a, hobby: h }));
+        alert("Анкета сохранена! Теперь ты элитный участник клуба.");
+        document.getElementById('profile-win').style.display = 'none';
+    }
+
     function viewUser(name) {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", dbUrl + "profiles/" + name + ".json", true);
         xhr.onreadystatechange = function() {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 var p = JSON.parse(xhr.responseText);
-                if (!p) alert("Пользователь " + name + " еще не заполнил анкету.");
-                else alert("АНКЕТА: " + name + "\nО себе: " + p.about + "\nХобби: " + p.hobby);
+                if (!p) alert("У юзера " + name + " еще нет анкеты.");
+                else alert("АНКЕТА ЮЗЕРА " + name + ":\n\nО себе: " + p.about + "\nХобби: " + p.hobby);
             }
         };
         xhr.send();
     }
 
-    function openProfile() { document.getElementById('profile-win').style.display = 'block'; }
-
-    function saveProfile() {
-        var u = document.getElementById('user').value;
-        var a = document.getElementById('p-about').value;
-        var h = document.getElementById('p-hobby').value;
-        var xhr = new XMLHttpRequest();
-        xhr.open("PUT", dbUrl + "profiles/" + u + ".json", true);
-        xhr.send(JSON.stringify({ about: a, hobby: h }));
-        alert("Анкета обновлена!");
-        document.getElementById('profile-win').style.display = 'none';
-    }
-
-    // 4. УДАЛЕНИЕ (АДМИН)
+    // 4. УДАЛЕНИЕ (Пароль 2000)
     function delMsg(id) {
         var p = prompt("Пароль админа:");
         if (p === "2000") {
@@ -161,14 +163,11 @@
             xhr.open("DELETE", dbUrl + "messages/" + id + ".json", true);
             xhr.onreadystatechange = function() { if(xhr.readyState==4) load(); };
             xhr.send();
-        } else if (p !== null) { alert("В доступе отказано!"); }
+        }
     }
 
-    // Старт
     load();
-    // Автообновление раз в 30 сек (для маминого Ergo)
-    setInterval(load, 30000);
+    setInterval(load, 30000); // Автообновление
 </script>
-
 </body>
 </html>
